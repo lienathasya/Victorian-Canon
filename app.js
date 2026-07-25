@@ -1372,7 +1372,6 @@ function updateView() {
   renderLegend();
   renderLineLegend();
   renderHistoricalEvents();
-  updateMarkers();
   renderConnectionDetails();
   renderNetworkLines();
 }
