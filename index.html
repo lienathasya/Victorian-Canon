@@ -29,19 +29,14 @@
           Nathasya Josephine (National Taiwan University)
         </p>
       </div>
-      <div class="header-actions">
-        <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle" aria-expanded="true">
-          Hide controls
-        </button>
-        <div class="header-stats">
-          <div class="stat">
-            <span class="stat-value" id="visible-count">0</span>
-            <span class="stat-label">Visible</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="total-count">58</span>
-            <span class="stat-label">Total</span>
-          </div>
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-value" id="visible-count">0</span>
+          <span class="stat-label">Visible</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="total-count">58</span>
+          <span class="stat-label">Total</span>
         </div>
       </div>
     </header>
@@ -144,52 +139,44 @@
           </div>
         </section>
 
-        <section class="timeline-dock" id="timeline-dock">
-          <div class="timeline-dock-header">
-            <h2>Timeline</h2>
-            <button type="button" class="timeline-toggle-btn" id="timeline-toggle" aria-expanded="true">
-              Hide timeline
-            </button>
-          </div>
-          <div class="timeline-dock-body">
-            <div class="timeline-controls">
-              <div class="decade-display">
-                <span id="decade-label">1820 – 1830</span>
-              </div>
-              <input
-                type="range"
-                id="decade-slider"
-                min="0"
-                max="7"
-                value="0"
-                step="1"
-                aria-label="Select decade"
-              />
-              <div class="decade-buttons" id="decade-buttons"></div>
-              <label class="checkbox-row">
-                <input type="checkbox" id="show-inactive" />
-                Dim authors inactive in this decade
-              </label>
+        <section class="timeline-dock">
+          <div class="timeline-controls">
+            <div class="decade-display">
+              <span id="decade-label">1820 – 1830</span>
+            </div>
+            <input
+              type="range"
+              id="decade-slider"
+              min="0"
+              max="7"
+              value="0"
+              step="1"
+              aria-label="Select decade"
+            />
+            <div class="decade-buttons" id="decade-buttons"></div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="show-inactive" />
+              Dim authors inactive in this decade
+            </label>
 
-              <div class="tour-controls">
-                <div class="tour-button-row">
-                  <button type="button" class="tour-btn primary" id="tour-start">Start Tour</button>
-                  <button type="button" class="tour-btn" id="tour-prev" disabled>Previous</button>
-                  <button type="button" class="tour-btn" id="tour-next" disabled>Next</button>
-                  <button type="button" class="tour-btn" id="tour-pause" disabled>Pause</button>
-                  <button type="button" class="tour-btn" id="tour-exit" disabled>Exit Tour</button>
-                </div>
-                <label class="checkbox-row tour-loop-row">
-                  <input type="checkbox" id="tour-loop" />
-                  Loop tour
-                </label>
-                <p class="panel-help tour-help">Keyboard: Left / Right, Space, Esc.</p>
+            <div class="tour-controls">
+              <div class="tour-button-row">
+                <button type="button" class="tour-btn primary" id="tour-start">Start Tour</button>
+                <button type="button" class="tour-btn" id="tour-prev" disabled>Previous</button>
+                <button type="button" class="tour-btn" id="tour-next" disabled>Next</button>
+                <button type="button" class="tour-btn" id="tour-pause" disabled>Pause</button>
+                <button type="button" class="tour-btn" id="tour-exit" disabled>Exit Tour</button>
               </div>
+              <label class="checkbox-row tour-loop-row">
+                <input type="checkbox" id="tour-loop" />
+                Loop tour
+              </label>
+              <p class="panel-help tour-help">Keyboard: Left / Right, Space, Esc.</p>
             </div>
-            <div class="events-box">
-              <h3>Historical context</h3>
-              <ul id="event-list"></ul>
-            </div>
+          </div>
+          <div class="events-box">
+            <h3>Historical context</h3>
+            <ul id="event-list"></ul>
           </div>
         </section>
 
