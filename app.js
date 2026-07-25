@@ -182,6 +182,10 @@ let tourState = {
   currentAuthorNumber: null,
   snapshot: null,
 };
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "victorian-authors-map.sidebarCollapsed";
+const TIMELINE_COLLAPSED_STORAGE_KEY = "victorian-authors-map.timelineCollapsed";
+let sidebarCollapsed = false;
+let timelineCollapsed = false;
 let state = {
   decadeIndex: 0,
   colorField: "gender",
@@ -236,6 +240,11 @@ const toggleImageBtn = document.getElementById("toggle-image");
 const detailPanel = document.getElementById("detail-panel");
 const detailContent = document.getElementById("detail-content");
 const closeDetailBtn = document.getElementById("close-detail");
+const sidebarToggleBtn = document.getElementById("sidebar-toggle");
+const appShell = document.querySelector(".app");
+const timelineDock = document.getElementById("timeline-dock");
+const timelineToggleBtn = document.getElementById("timeline-toggle");
+const mapArea = document.querySelector(".map-area");
 
 function yesNo(value) {
   return value ? "Yes" : "No";
@@ -976,6 +985,8 @@ async function init() {
   initMap();
   networkLayer = L.layerGroup().addTo(map);
   bindEvents();
+  restoreSidebarState();
+  restoreTimelineState();
   renderDecadeButtons();
   updateView();
   syncTourControls();
@@ -1037,6 +1048,101 @@ function initMap() {
       setTimeout(() => map.invalidateSize(), 300);
     }
   });
+}
+
+function syncTimelineToggleButton() {
+  if (!timelineToggleBtn) return;
+
+  timelineToggleBtn.textContent = timelineCollapsed ? "Show timeline" : "Hide timeline";
+  timelineToggleBtn.setAttribute("aria-expanded", String(!timelineCollapsed));
+  timelineToggleBtn.setAttribute(
+    "aria-label",
+    timelineCollapsed ? "Show timeline controls and historical context" : "Hide timeline controls and historical context"
+  );
+}
+
+function applyTimelineState(nextCollapsed, options = {}) {
+  timelineCollapsed = nextCollapsed;
+  timelineDock?.classList.toggle("collapsed", timelineCollapsed);
+  mapArea?.classList.toggle("timeline-collapsed", timelineCollapsed);
+  syncTimelineToggleButton();
+
+  if (options.persist !== false) {
+    try {
+      window.localStorage.setItem(TIMELINE_COLLAPSED_STORAGE_KEY, String(timelineCollapsed));
+    } catch (error) {
+      // Ignore storage failures in restricted browsing modes.
+    }
+  }
+
+  if (map) {
+    window.setTimeout(() => map.invalidateSize(), 250);
+  }
+}
+
+function toggleTimelineDock() {
+  applyTimelineState(!timelineCollapsed);
+}
+
+function restoreTimelineState() {
+  try {
+    const savedValue = window.localStorage.getItem(TIMELINE_COLLAPSED_STORAGE_KEY);
+    if (savedValue === "true") {
+      applyTimelineState(true, { persist: false });
+      return;
+    }
+  } catch (error) {
+    // Ignore storage failures and keep the default open state.
+  }
+
+  applyTimelineState(false, { persist: false });
+}
+
+function syncSidebarToggleButton() {
+  if (!sidebarToggleBtn) return;
+
+  sidebarToggleBtn.textContent = sidebarCollapsed ? "Show controls" : "Hide controls";
+  sidebarToggleBtn.setAttribute("aria-expanded", String(!sidebarCollapsed));
+  sidebarToggleBtn.setAttribute(
+    "aria-label",
+    sidebarCollapsed ? "Show map controls" : "Hide map controls"
+  );
+}
+
+function applySidebarState(nextCollapsed, options = {}) {
+  sidebarCollapsed = nextCollapsed;
+  appShell?.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+  syncSidebarToggleButton();
+
+  if (options.persist !== false) {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(sidebarCollapsed));
+    } catch (error) {
+      // Ignore storage failures in restricted browsing modes.
+    }
+  }
+
+  if (map) {
+    window.setTimeout(() => map.invalidateSize(), 250);
+  }
+}
+
+function toggleSidebar() {
+  applySidebarState(!sidebarCollapsed);
+}
+
+function restoreSidebarState() {
+  try {
+    const savedValue = window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
+    if (savedValue === "true") {
+      applySidebarState(true, { persist: false });
+      return;
+    }
+  } catch (error) {
+    // Ignore storage failures and keep the default open state.
+  }
+
+  applySidebarState(false, { persist: false });
 }
 
 function renderHistoricalEvents() {
@@ -1335,6 +1441,8 @@ function bindEvents() {
 
   closeDetailBtn.addEventListener("click", hideDetail);
   toggleImageBtn?.addEventListener("click", toggleDetailImage);
+  sidebarToggleBtn?.addEventListener("click", toggleSidebar);
+  timelineToggleBtn?.addEventListener("click", toggleTimelineDock);
 
   tourStartBtn?.addEventListener("click", startTour);
   tourPrevBtn?.addEventListener("click", () => advanceTour(-1));
