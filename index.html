@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canonical Victorian Inquiry through Cartographic Visualization</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-text">
+        <h1>Canonical Victorian Inquiry through Cartographic Visualization</h1>
+        <p class="subtitle">
+          Birthplaces and literary careers of Norton Anthology authors, 1820–1900
+          <br><br>
+          Nathasya Josephine (National Taiwan University)
+        </p>
+      </div>
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-value" id="visible-count">0</span>
+          <span class="stat-label">Visible</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="total-count">58</span>
+          <span class="stat-label">Total</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <aside class="sidebar">
+        <section class="panel">
+          <h2>Map styling</h2>
+          <label for="color-field">Color points by</label>
+          <select id="color-field">
+            <option value="gender" selected>Gender</option>
+            <option value="ethnicity_white">White ethnicity</option>
+          </select>
+
+          <label for="size-field">Node size</label>
+          <select id="size-field">
+            <option value="canonScore" selected>Canonical Advantage Score</option>
+            <option value="totalPages">Total pages in Norton</option>
+            <option value="nortonWorks">Works in Norton Anthology</option>
+          </select>
+          <p class="panel-help">These values change marker size instead of color.</p>
+
+          <label for="search">Search authors</label>
+          <input type="search" id="search" placeholder="Name, city, or genre..." />
+
+        </section>
+
+        <section class="panel">
+          <h2>Network overlays</h2>
+          <p class="panel-help">Choose up to 2 overlays. Shared categories create thicker blended lines.</p>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-family" checked />
+            Family
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-partner" />
+            Partner
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-finance" />
+            Financial privilege
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-livelihood-yes" />
+            Writing as livelihood
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-livelihood-no" />
+            Writing not as livelihood
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-london-yes" />
+            Born in London
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-london-no" />
+            Not born in London
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-england-yes" />
+            Born in England
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="overlay-england-no" />
+            Not born in England
+          </label>
+
+          <p id="overlay-warning" class="panel-help"></p>
+        </section>
+
+        <section class="panel author-list-panel">
+          <h2>Authors this decade</h2>
+          <ul id="author-list" class="author-list"></ul>
+        </section>
+      </aside>
+
+      <main class="map-area">
+        <div id="map"></div>
+
+        <section class="panel legend-panel floating-card legend-card">
+          <div class="legend-header-row">
+            <h2>Legend & connections</h2>
+            <span class="legend-tip">Click a line to keep its note visible</span>
+          </div>
+          <div id="legend"></div>
+          <div id="line-legend" class="line-legend"></div>
+          <div id="connection-details" class="connection-card">
+            <h3>Selected connection</h3>
+            <p id="connection-empty" class="connection-empty">Click a colored line to see the explanation and write a note.</p>
+            <div id="connection-content" class="connection-content hidden"></div>
+          </div>
+        </section>
+
+        <section class="timeline-dock">
+          <div class="timeline-controls">
+            <div class="decade-display">
+              <span id="decade-label">1820 – 1830</span>
+            </div>
+            <input
+              type="range"
+              id="decade-slider"
+              min="0"
+              max="7"
+              value="0"
+              step="1"
+              aria-label="Select decade"
+            />
+            <div class="decade-buttons" id="decade-buttons"></div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="show-inactive" />
+              Dim authors inactive in this decade
+            </label>
+
+            <div class="tour-controls">
+              <div class="tour-button-row">
+                <button type="button" class="tour-btn primary" id="tour-start">Start Tour</button>
+                <button type="button" class="tour-btn" id="tour-prev" disabled>Previous</button>
+                <button type="button" class="tour-btn" id="tour-next" disabled>Next</button>
+                <button type="button" class="tour-btn" id="tour-pause" disabled>Pause</button>
+                <button type="button" class="tour-btn" id="tour-exit" disabled>Exit Tour</button>
+              </div>
+              <label class="checkbox-row tour-loop-row">
+                <input type="checkbox" id="tour-loop" />
+                Loop tour
+              </label>
+              <p class="panel-help tour-help">Keyboard: Left / Right, Space, Esc.</p>
+            </div>
+          </div>
+          <div class="events-box">
+            <h3>Historical context</h3>
+            <ul id="event-list"></ul>
+          </div>
+        </section>
+
+        <section id="tour-progress" class="tour-progress floating-card hidden" aria-live="polite">
+          <div class="tour-progress-head">
+            <span class="tour-progress-label">Guided tour</span>
+            <span id="tour-progress-text" class="tour-progress-text">Author 1 / 58</span>
+          </div>
+          <div class="tour-progress-bar">
+            <span id="tour-progress-fill" class="tour-progress-fill"></span>
+          </div>
+        </section>
+
+        <div id="detail-panel" class="detail-panel hidden" aria-live="polite">
+          <button class="detail-toggle-btn" id="toggle-image" aria-label="Hide author image">Hide image</button>
+          <button class="close-btn" id="close-detail" aria-label="Close details">&times;</button>
+          <div id="detail-content"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="app.js"></script>
+</body>
+</html>

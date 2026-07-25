@@ -1,0 +1,32 @@
+[
+  {
+    "source": "Robert Browning",
+    "target": "Elizabeth Barrett Browning",
+    "type": "partner"
+  },
+  {
+    "source": "Dante Gabriel Rossetti",
+    "target": "Christina Rossetti",
+    "type": "family"
+  },
+  {
+    "source": "Thomas Henry Huxley",
+    "target": "Leonard Huxley",
+    "type": "family"
+  },
+  {
+    "source": "Michael Field (Katharine Harris Bradley)",
+    "target": "Michael Field (Edith Emma Cooper)",
+    "type": "family"
+  },
+  {
+    "source": "Michael Field (Katharine Harris Bradley)",
+    "target": "Michael Field (Edith Emma Cooper)",
+    "type": "partner"
+  },
+  {
+    "source": "Matthew Arnold",
+    "target": "Leonard Huxley",
+    "type": "family"
+  }
+]
