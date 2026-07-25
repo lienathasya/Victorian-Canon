@@ -245,6 +245,7 @@ const appShell = document.querySelector(".app");
 const timelineDock = document.getElementById("timeline-dock");
 const timelineToggleBtn = document.getElementById("timeline-toggle");
 const mapArea = document.querySelector(".map-area");
+let timelineStateSyncing = false;
 
 function yesNo(value) {
   return value ? "Yes" : "No";
@@ -1054,7 +1055,6 @@ function syncTimelineToggleButton() {
   if (!timelineToggleBtn) return;
 
   timelineToggleBtn.textContent = timelineCollapsed ? "Show timeline" : "Hide timeline";
-  timelineToggleBtn.setAttribute("aria-expanded", String(!timelineCollapsed));
   timelineToggleBtn.setAttribute(
     "aria-label",
     timelineCollapsed ? "Show timeline controls and historical context" : "Hide timeline controls and historical context"
@@ -1063,7 +1063,11 @@ function syncTimelineToggleButton() {
 
 function applyTimelineState(nextCollapsed, options = {}) {
   timelineCollapsed = nextCollapsed;
-  timelineDock?.classList.toggle("collapsed", timelineCollapsed);
+  if (timelineDock && timelineDock.open !== !timelineCollapsed) {
+    timelineStateSyncing = true;
+    timelineDock.open = !timelineCollapsed;
+    timelineStateSyncing = false;
+  }
   mapArea?.classList.toggle("timeline-collapsed", timelineCollapsed);
   syncTimelineToggleButton();
 
@@ -1082,6 +1086,26 @@ function applyTimelineState(nextCollapsed, options = {}) {
 
 function toggleTimelineDock() {
   applyTimelineState(!timelineCollapsed);
+}
+
+function syncTimelineStateFromDock(options = {}) {
+  if (!timelineDock) return;
+
+  timelineCollapsed = !timelineDock.open;
+  mapArea?.classList.toggle("timeline-collapsed", timelineCollapsed);
+  syncTimelineToggleButton();
+
+  if (options.persist !== false) {
+    try {
+      window.localStorage.setItem(TIMELINE_COLLAPSED_STORAGE_KEY, String(timelineCollapsed));
+    } catch (error) {
+      // Ignore storage failures in restricted browsing modes.
+    }
+  }
+
+  if (map) {
+    window.setTimeout(() => map.invalidateSize(), 250);
+  }
 }
 
 function restoreTimelineState() {
@@ -1442,7 +1466,10 @@ function bindEvents() {
   closeDetailBtn.addEventListener("click", hideDetail);
   toggleImageBtn?.addEventListener("click", toggleDetailImage);
   sidebarToggleBtn?.addEventListener("click", toggleSidebar);
-  timelineToggleBtn?.addEventListener("click", toggleTimelineDock);
+  timelineDock?.addEventListener("toggle", () => {
+    if (timelineStateSyncing) return;
+    syncTimelineStateFromDock();
+  });
 
   tourStartBtn?.addEventListener("click", startTour);
   tourPrevBtn?.addEventListener("click", () => advanceTour(-1));
