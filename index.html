@@ -144,11 +144,13 @@
           </div>
         </section>
 
-        <details class="timeline-dock" id="timeline-dock" open>
-          <summary class="timeline-dock-header">
+        <section class="timeline-dock" id="timeline-dock">
+          <div class="timeline-dock-header">
             <h2>Timeline</h2>
-            <span class="timeline-toggle-btn" id="timeline-toggle" aria-hidden="true">Hide timeline</span>
-          </summary>
+            <button type="button" class="timeline-toggle-btn" id="timeline-toggle" aria-expanded="true">
+              Hide timeline
+            </button>
+          </div>
           <div class="timeline-dock-body">
             <div class="timeline-controls">
               <div class="decade-display">
@@ -189,7 +191,7 @@
               <ul id="event-list"></ul>
             </div>
           </div>
-        </details>
+        </section>
 
         <section id="tour-progress" class="tour-progress floating-card hidden" aria-live="polite">
           <div class="tour-progress-head">

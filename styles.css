@@ -489,12 +489,6 @@ input[type="range"] {
   border-radius: 14px;
   background: rgba(22, 27, 34, 0.95);
   backdrop-filter: blur(10px);
-  cursor: pointer;
-  list-style: none;
-}
-
-.timeline-dock > summary::-webkit-details-marker {
-  display: none;
 }
 
 .timeline-dock-header h2 {
@@ -532,11 +526,15 @@ input[type="range"] {
   gap: 0.6rem;
 }
 
-.timeline-dock:not([open]) .timeline-dock-body {
+.timeline-dock.collapsed .timeline-dock-body {
   display: none;
 }
 
-.timeline-dock:not([open]) .timeline-dock-header {
+.timeline-dock.collapsed {
+  bottom: 1rem;
+}
+
+.timeline-dock.collapsed .timeline-dock-header {
   margin-bottom: 0;
 }
 
