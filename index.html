@@ -30,6 +30,7 @@
         </p>
       </div>
       <div class="header-stats">
+        <button type="button" class="sidebar-toggle-btn" id="focus-map-toggle" aria-pressed="false">Focus Map</button>
         <div class="stat">
           <span class="stat-value" id="visible-count">0</span>
           <span class="stat-label">Visible</span>
@@ -64,56 +65,59 @@
 
         </section>
 
-        <section class="panel">
-          <h2>Network overlays</h2>
+        <section class="panel overlay-panel">
+          <div class="overlay-header-row">
+            <h2>Network overlays</h2>
+            <span id="overlay-warning" class="overlay-warning"></span>
+          </div>
           <p class="panel-help">Choose up to 2 overlays. Shared categories create thicker blended lines.</p>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-family" checked />
-            Family
-          </label>
+          <div class="overlay-grid">
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-family" checked />
+              Family
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-partner" />
-            Partner
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-partner" />
+              Partner
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-finance" />
-            Financial privilege
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-finance" />
+              Financial privilege
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-livelihood-yes" />
-            Writing as livelihood
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-livelihood-yes" />
+              Writing as livelihood
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-livelihood-no" />
-            Writing not as livelihood
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-livelihood-no" />
+              Writing not as livelihood
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-london-yes" />
-            Born in London
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-london-yes" />
+              Born in London
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-london-no" />
-            Not born in London
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-london-no" />
+              Not born in London
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-england-yes" />
-            Born in England
-          </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-england-yes" />
+              Born in England
+            </label>
 
-          <label class="checkbox-row">
-            <input type="checkbox" id="overlay-england-no" />
-            Not born in England
-          </label>
-
-          <p id="overlay-warning" class="panel-help"></p>
+            <label class="checkbox-row">
+              <input type="checkbox" id="overlay-england-no" />
+              Not born in England
+            </label>
+          </div>
         </section>
 
         <section class="panel author-list-panel">

@@ -169,6 +169,7 @@ let markers = new Map();
 let selectedAuthor = null;
 let selectedConnection = null;
 let detailImageHidden = false;
+let focusMapMode = false;
 const TOUR_CITY_ZOOM = 7;
 const TOUR_STEP_DELAY_MS = 3200;
 const TOUR_FLY_DURATION_MS = 1.2;
@@ -223,6 +224,7 @@ const overlayEnglandYesCheckbox = document.getElementById("overlay-england-yes")
 const overlayEnglandNoCheckbox = document.getElementById("overlay-england-no");
 const overlayWarningEl = document.getElementById("overlay-warning");
 const visibleCountEl = document.getElementById("visible-count");
+const focusMapToggle = document.getElementById("focus-map-toggle");
 const tourStartBtn = document.getElementById("tour-start");
 const tourPrevBtn = document.getElementById("tour-prev");
 const tourNextBtn = document.getElementById("tour-next");
@@ -442,16 +444,19 @@ function renderDecadeButtons() {
 }
 
 function renderConnectionDetails() {
+  const connectionCardEl = document.getElementById("connection-details");
   const emptyEl = document.getElementById("connection-empty");
   const contentEl = document.getElementById("connection-content");
 
   if (!selectedConnection) {
+    connectionCardEl?.classList.add("hidden");
     emptyEl.classList.remove("hidden");
     contentEl.classList.add("hidden");
     contentEl.innerHTML = "";
     return;
   }
 
+  connectionCardEl?.classList.remove("hidden");
   emptyEl.classList.add("hidden");
   contentEl.classList.remove("hidden");
   contentEl.innerHTML = `
@@ -571,13 +576,28 @@ function showDetail(author) {
 
 function hideDetail() {
   selectedAuthor = null;
-  detailPanel.classList.add("hidden");
   detailPanel.classList.remove("detail-open");
+  detailPanel.classList.remove("hidden");
+  detailContent.innerHTML = `
+    <p class="detail-empty">Click an author node to see the profile panel here.</p>
+  `;
+  syncDetailImageToggle();
   highlightSelection();
   // Trigger map resize after animation
   setTimeout(() => {
     if (map) map.invalidateSize();
   }, 300);
+}
+
+function showEmptyDetailPanel() {
+  selectedAuthor = null;
+  detailPanel.classList.remove("hidden");
+  detailPanel.classList.add("detail-open");
+  detailContent.innerHTML = `
+    <p class="detail-empty">Click an author node to see the profile panel here.</p>
+  `;
+  syncDetailImageToggle();
+  highlightSelection();
 }
 
 function highlightSelection() {
@@ -784,6 +804,7 @@ function endTour() {
   decadeLabel.textContent = DECADES[state.decadeIndex].label;
   renderDecadeButtons();
   updateView();
+  showEmptyDetailPanel();
 
   if (snapshot.mapCenter && map) {
     map.setView(snapshot.mapCenter, snapshot.mapZoom ?? map.getZoom(), { animate: false });
@@ -794,10 +815,10 @@ function endTour() {
     if (restoredAuthor) {
       showDetail(restoredAuthor);
     } else {
-      hideDetail();
+      showEmptyDetailPanel();
     }
   } else {
-    hideDetail();
+    showEmptyDetailPanel();
   }
 
   renderConnectionDetails();
@@ -959,7 +980,10 @@ function calculateCanonScore(author) {
   return score;
 }
 async function init() {
-  authors = await fetch("./data/authors.json").then((r) => {
+  const authorsUrl = new URL("./data/authors.json", window.location.href);
+  const relationshipsUrl = new URL("./data/relationships.json", window.location.href);
+
+  authors = await fetch(authorsUrl).then((r) => {
     if (!r.ok) throw new Error("Could not load authors.json");
     return r.json();
   });
@@ -968,7 +992,7 @@ async function init() {
     author.canonScore = calculateCanonScore(author);
   });
 
-  relationships = await fetch("./data/relationships.json").then((r) => {
+  relationships = await fetch(relationshipsUrl).then((r) => {
     if (!r.ok) return [];
     return r.json();
   });
@@ -978,6 +1002,8 @@ async function init() {
   bindEvents();
   renderDecadeButtons();
   updateView();
+  showEmptyDetailPanel();
+  syncFocusMapMode();
   syncTourControls();
 
   // Ensure map size is correct after DOM is fully rendered
@@ -1008,6 +1034,9 @@ function initMap() {
     subdomains: "abcd",
     maxZoom: 19,
   }).addTo(map);
+setTimeout(() => {
+    if (map) map.invalidateSize();
+}, 200);
 
   authors.forEach((author) => {
     const marker = L.marker([author.latitude, author.longitude], {
@@ -1242,8 +1271,22 @@ function updateView() {
   renderLegend();
   renderLineLegend();
   renderHistoricalEvents();
+  updateMarkers();
   renderConnectionDetails();
   renderNetworkLines();
+}
+
+function syncFocusMapMode() {
+  document.body.classList.toggle("focus-map-mode", focusMapMode);
+
+  if (focusMapToggle) {
+    focusMapToggle.textContent = focusMapMode ? "Show timeline" : "Focus Map";
+    focusMapToggle.setAttribute("aria-pressed", String(focusMapMode));
+  }
+
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 250);
 }
 
 function setDecade(index) {
@@ -1334,6 +1377,10 @@ function bindEvents() {
 
   closeDetailBtn.addEventListener("click", hideDetail);
   toggleImageBtn?.addEventListener("click", toggleDetailImage);
+  focusMapToggle?.addEventListener("click", () => {
+    focusMapMode = !focusMapMode;
+    syncFocusMapMode();
+  });
 
   tourStartBtn?.addEventListener("click", startTour);
   tourPrevBtn?.addEventListener("click", () => advanceTour(-1));
@@ -1355,6 +1402,8 @@ function bindEvents() {
 function syncDetailImageToggle() {
   if (!toggleImageBtn) return;
 
+  toggleImageBtn.hidden = !selectedAuthor;
+  toggleImageBtn.disabled = !selectedAuthor;
   toggleImageBtn.textContent = detailImageHidden ? "Show image" : "Hide image";
   toggleImageBtn.setAttribute(
     "aria-label",
