@@ -979,23 +979,45 @@ function calculateCanonScore(author) {
 
   return score;
 }
-async function init() {
-  const authorsUrl = new URL("./data/authors.json", window.location.href);
-  const relationshipsUrl = new URL("./data/relationships.json", window.location.href);
 
-  authors = await fetch(authorsUrl).then((r) => {
-    if (!r.ok) throw new Error("Could not load authors.json");
-    return r.json();
-  });
+async function fetchJsonWithFallback(paths, { required = false, label = "data" } = {}) {
+  let lastError = null;
+
+  for (const path of paths) {
+    try {
+      const url = new URL(path, window.location.href);
+      const response = await fetch(url);
+      if (!response.ok) {
+        lastError = new Error(`${label}: ${response.status} ${response.statusText}`);
+        continue;
+      }
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (required) {
+    throw lastError || new Error(`Could not load ${label}`);
+  }
+
+  return [];
+}
+
+async function init() {
+  authors = await fetchJsonWithFallback(
+    ["./data/authors.json", "data/authors.json", "/data/authors.json"],
+    { required: true, label: "authors.json" }
+  );
 
   authors.forEach((author) => {
     author.canonScore = calculateCanonScore(author);
   });
 
-  relationships = await fetch(relationshipsUrl).then((r) => {
-    if (!r.ok) return [];
-    return r.json();
-  });
+  relationships = await fetchJsonWithFallback(
+    ["./data/relationships.json", "data/relationships.json", "/data/relationships.json"],
+    { required: false, label: "relationships.json" }
+  );
 
   initMap();
   networkLayer = L.layerGroup().addTo(map);
@@ -1013,12 +1035,10 @@ async function init() {
 }
 
 init().catch((error) => {
-  document.body.innerHTML = `
-    <div style="padding:40px;font-family:Arial;color:white;background:#111;height:100vh;">
-      <h2>ERROR</h2>
-      <pre>${error.stack || error.message || error}</pre>
-    </div>
-  `;
+  if (overlayWarningEl) {
+    overlayWarningEl.textContent = "Data failed to load";
+  }
+  console.error("Initialization failed:", error);
 });
 function initMap() {
   map = L.map("map", {
