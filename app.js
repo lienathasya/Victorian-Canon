@@ -1005,28 +1005,42 @@ async function fetchJsonWithFallback(paths, { required = false, label = "data" }
 }
 
 async function init() {
-  authors = await fetchJsonWithFallback(
-    ["./data/authors.json", "data/authors.json", "/data/authors.json"],
-    { required: true, label: "authors.json" }
-  );
-
-  authors.forEach((author) => {
-    author.canonScore = calculateCanonScore(author);
-  });
-
-  relationships = await fetchJsonWithFallback(
-    ["./data/relationships.json", "data/relationships.json", "/data/relationships.json"],
-    { required: false, label: "relationships.json" }
-  );
-
+  // Initialize the map FIRST so it always renders, even if the data
+  // fails to load (e.g. when the page is opened directly via file://
+  // where fetch() of local JSON is blocked by browser CORS).
   initMap();
   networkLayer = L.layerGroup().addTo(map);
   bindEvents();
   renderDecadeButtons();
-  updateView();
   showEmptyDetailPanel();
   syncFocusMapMode();
   syncTourControls();
+
+  try {
+    authors = await fetchJsonWithFallback(
+      ["./data/authors.json", "data/authors.json", "/data/authors.json"],
+      { required: true, label: "authors.json" }
+    );
+
+    authors.forEach((author) => {
+      author.canonScore = calculateCanonScore(author);
+    });
+
+    relationships = await fetchJsonWithFallback(
+      ["./data/relationships.json", "data/relationships.json", "/data/relationships.json"],
+      { required: false, label: "relationships.json" }
+    );
+
+    // Markers depend on author data, so create them only after it loads.
+    createMarkers();
+  } catch (error) {
+    console.error("Data loading failed:", error);
+    if (overlayWarningEl) {
+      overlayWarningEl.textContent = "Data failed to load — run a local server";
+    }
+  }
+
+  updateView();
 
   // Ensure map size is correct after DOM is fully rendered
   setTimeout(() => {
@@ -1054,9 +1068,21 @@ function initMap() {
     subdomains: "abcd",
     maxZoom: 19,
   }).addTo(map);
-setTimeout(() => {
+
+  setTimeout(() => {
     if (map) map.invalidateSize();
-}, 200);
+  }, 200);
+
+  // Trigger resize when layout changes
+  window.addEventListener("resize", () => {
+    if (map) {
+      setTimeout(() => map.invalidateSize(), 300);
+    }
+  });
+}
+
+function createMarkers() {
+  markers.clear();
 
   authors.forEach((author) => {
     const marker = L.marker([author.latitude, author.longitude], {
@@ -1078,13 +1104,6 @@ setTimeout(() => {
     marker.on("click", () => showDetail(author));
 
     markers.set(author.number, { marker, author });
-  });
-
-  // Trigger resize when layout changes
-  window.addEventListener("resize", () => {
-    if (map) {
-      setTimeout(() => map.invalidateSize(), 300);
-    }
   });
 }
 
@@ -1410,6 +1429,23 @@ function bindEvents() {
   tourLoopCheckbox?.addEventListener("change", (e) => {
     tourState.loop = e.target.checked;
   });
+
+  const eventsToggle = document.getElementById("events-toggle");
+  const eventsBox = document.getElementById("events-box");
+  if (eventsToggle && eventsBox) {
+    eventsToggle.addEventListener("click", () => {
+      const isOpen = eventsBox.classList.toggle("open");
+      document.body.classList.toggle("events-open", isOpen);
+      eventsToggle.textContent = isOpen
+        ? "Hide historical context"
+        : "Show historical context";
+      eventsToggle.setAttribute("aria-expanded", String(isOpen));
+      eventsBox.setAttribute("aria-hidden", String(!isOpen));
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 300);
+    });
+  }
 
   window.addEventListener("keydown", handleTourKeydown);
 

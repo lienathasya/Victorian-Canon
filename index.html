@@ -144,43 +144,48 @@
         </section>
 
         <section class="timeline-dock">
-          <div class="timeline-controls">
-            <div class="decade-display">
-              <span id="decade-label">1820 – 1830</span>
-            </div>
-            <input
-              type="range"
-              id="decade-slider"
-              min="0"
-              max="7"
-              value="0"
-              step="1"
-              aria-label="Select decade"
-            />
-            <div class="decade-buttons" id="decade-buttons"></div>
-            <label class="checkbox-row">
-              <input type="checkbox" id="show-inactive" />
-              Dim authors inactive in this decade
-            </label>
-
-            <div class="tour-controls">
-              <div class="tour-button-row">
-                <button type="button" class="tour-btn primary" id="tour-start">Start Tour</button>
-                <button type="button" class="tour-btn" id="tour-prev" disabled>Previous</button>
-                <button type="button" class="tour-btn" id="tour-next" disabled>Next</button>
-                <button type="button" class="tour-btn" id="tour-pause" disabled>Pause</button>
-                <button type="button" class="tour-btn" id="tour-exit" disabled>Exit Tour</button>
-              </div>
-              <label class="checkbox-row tour-loop-row">
-                <input type="checkbox" id="tour-loop" />
-                Loop tour
-              </label>
-              <p class="panel-help tour-help">Keyboard: Left / Right, Space, Esc.</p>
-            </div>
-          </div>
-          <div class="events-box">
+          <div class="events-box" id="events-box" aria-hidden="true">
             <h3>Historical context</h3>
             <ul id="event-list"></ul>
+          </div>
+          <div class="timeline-controls">
+            <div class="timeline-group">
+              <span id="decade-label" class="decade-display">1820 – 1830</span>
+              <input
+                type="range"
+                id="decade-slider"
+                min="0"
+                max="7"
+                value="0"
+                step="1"
+                aria-label="Select decade"
+              />
+              <div class="decade-buttons" id="decade-buttons"></div>
+            </div>
+            <div class="timeline-group">
+              <label class="checkbox-row">
+                <input type="checkbox" id="show-inactive" />
+                Dim inactive
+              </label>
+              <div class="tour-controls">
+                <button type="button" class="tour-btn primary" id="tour-start">Start Tour</button>
+                <button type="button" class="tour-btn" id="tour-prev" disabled>Prev</button>
+                <button type="button" class="tour-btn" id="tour-next" disabled>Next</button>
+                <button type="button" class="tour-btn" id="tour-pause" disabled>Pause</button>
+                <button type="button" class="tour-btn" id="tour-exit" disabled>Exit</button>
+                <label class="checkbox-row tour-loop-row">
+                  <input type="checkbox" id="tour-loop" />
+                  Loop
+                </label>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="events-toggle"
+              id="events-toggle"
+              aria-expanded="false"
+              aria-controls="events-box"
+            >Show historical context</button>
           </div>
         </section>
 
