@@ -29,8 +29,9 @@
           Author Anonymized for Peer Review
         </p>
       </div>
-      <div class="header-stats">
+<div class="header-stats">
         <button type="button" class="sidebar-toggle-btn" id="focus-map-toggle" aria-pressed="false">Focus Map</button>
+        <button type="button" class="sidebar-toggle-btn" id="researcher-toggle" aria-pressed="false">Researcher Toolbox</button>
         <div class="stat">
           <span class="stat-value" id="visible-count">0</span>
           <span class="stat-label">Visible</span>
@@ -126,8 +127,35 @@
         </section>
       </aside>
 
-      <main class="map-area">
+<main class="map-area">
         <div id="map"></div>
+
+        <div id="researcher-toolbox" class="researcher-toolbox hidden" aria-label="Researcher toolbox">
+          <div class="toolbox-tools">
+            <div class="toolbox-ruler" id="toolbox-ruler">
+              <div class="ruler-line"></div>
+              <div class="ruler-handle ruler-handle-a" data-role="endpoint-a" title="Drag to resize / rotate"></div>
+              <div class="ruler-handle ruler-handle-b" data-role="endpoint-b" title="Drag to resize / rotate"></div>
+              <div class="ruler-rotate" data-role="rotate" title="Drag to rotate"></div>
+              <div class="ruler-readout" data-role="readout">0 km</div>
+              <div class="toolbox-label">Ruler</div>
+            </div>
+
+<div class="toolbox-protractor" id="toolbox-protractor">
+              <div class="protractor-dial">
+                <div class="protractor-arm protractor-arm-base" data-role="arm-base">
+                  <span class="protractor-arm-tip" data-role="arm-base" title="Drag to rotate baseline hand"></span>
+                </div>
+                <div class="protractor-arm protractor-arm-measure" data-role="arm-measure">
+                  <span class="protractor-arm-tip" data-role="arm-measure" title="Drag to rotate measuring hand"></span>
+                </div>
+                <div class="protractor-center"></div>
+              </div>
+              <div class="protractor-readout" data-role="readout">0°</div>
+              <div class="toolbox-label">Protractor</div>
+            </div>
+          </div>
+        </div>
 
         <section class="panel legend-panel floating-card legend-card">
           <div class="legend-header-row">

@@ -238,6 +238,386 @@ const toggleImageBtn = document.getElementById("toggle-image");
 const detailPanel = document.getElementById("detail-panel");
 const detailContent = document.getElementById("detail-content");
 const closeDetailBtn = document.getElementById("close-detail");
+const researcherToggle = document.getElementById("researcher-toggle");
+const researcherToolbox = document.getElementById("researcher-toolbox");
+const toolboxRuler = document.getElementById("toolbox-ruler");
+const toolboxProtractor = document.getElementById("toolbox-protractor");
+
+let toolboxActive = false;
+
+// Ruler state: endpoints are stored in .map-area pixel coordinates.
+const rulerState = {
+  p1: { x: 200, y: 200 },
+  p2: { x: 420, y: 200 },
+  dragging: null, // "body" | "endpoint-a" | "endpoint-b" | "rotate"
+  dragStart: null,
+  centerStart: null,
+  angleStart: 0,
+};
+
+// Protractor state: center, base-arm rotation, and measure-arm rotation.
+const protractorState = {
+  center: null, // set on init
+  baseRotation: -90, // degrees, accent baseline arm (points up)
+  measureRotation: -90, // degrees, blue measuring arm (points up)
+  dragging: null, // "body" | "arm-base" | "arm-measure"
+  dragStart: null,
+  centerStart: null,
+};
+
+const RULER_MIN_LENGTH = 20;
+// Sensitivity multipliers (0 < factor < 1 = less sensitive, slower following).
+// Higher values make the tools follow the pointer more closely.
+const ROTATION_SENSITIVITY = 0.55;
+const PROTRACTOR_SENSITIVITY = 0.6;
+
+function formatDistance(meters, mapObj) {
+  if (!mapObj || typeof mapObj.distance !== "function") {
+    return "0 km";
+  }
+
+  const km = meters / 1000;
+
+  if (km >= 100) {
+    return `${Math.round(km).toLocaleString()} km`;
+  }
+  if (km >= 1) {
+    return `${km.toFixed(1)} km`;
+  }
+  // Sub-kilometre distances are shown in metres for precision.
+  const windowMeters = getVisibleWindowMeters(mapObj);
+  if (windowMeters < 40000) {
+    return `${Math.round(meters)} m`;
+  }
+  return `${km.toFixed(2)} km`;
+}
+
+function getVisibleWindowMeters(mapObj) {
+  const center = mapObj.getCenter();
+  const bounds = mapObj.getBounds();
+  const north = bounds.getNorth();
+  const south = bounds.getSouth();
+  return mapObj.distance([north, center.lng], [south, center.lng]);
+}
+
+function getRulerEndpoints() {
+  return [rulerState.p1, rulerState.p2];
+}
+
+function rulerLineEl() {
+  return toolboxRuler ? toolboxRuler.querySelector(".ruler-line") : null;
+}
+
+function getRulerRotationDeg() {
+  const dx = rulerState.p2.x - rulerState.p1.x;
+  const dy = rulerState.p2.y - rulerState.p1.y;
+  return (Math.atan2(dy, dx) * 180) / Math.PI;
+}
+
+function updateRulerPosition() {
+  if (!toolboxRuler) return;
+
+  const cx = (rulerState.p1.x + rulerState.p2.x) / 2;
+  const cy = (rulerState.p1.y + rulerState.p2.y) / 2;
+  const length = Math.hypot(
+    rulerState.p2.x - rulerState.p1.x,
+    rulerState.p2.y - rulerState.p1.y
+  );
+  const angle = getRulerRotationDeg();
+
+  // The ruler element is a square container; we rotate it around its centre
+  // and position it so the two endpoints sit at its left/right edges.
+  toolboxRuler.style.left = `${cx}px`;
+  toolboxRuler.style.top = `${cy}px`;
+  toolboxRuler.style.width = `${length}px`;
+  toolboxRuler.style.height = `${length}px`;
+  toolboxRuler.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+
+  // The ruler-line spans the full width, so it now measures p1 -> p2.
+  const line = rulerLineEl();
+  if (line) {
+    line.style.width = "100%";
+  }
+
+  updateRulerReadout();
+}
+
+function updateRulerReadout() {
+  const readout = toolboxRuler ? toolboxRuler.querySelector('[data-role="readout"]') : null;
+  if (!readout || !map) return;
+
+  const meters = map.distance(
+    map.containerPointToLatLng(rulerState.p1),
+    map.containerPointToLatLng(rulerState.p2)
+  );
+
+  readout.textContent = formatDistance(meters, map);
+}
+
+function updateProtractorPosition() {
+  if (!toolboxProtractor) return;
+
+  const c = protractorState.center;
+  toolboxProtractor.style.left = `${c.x}px`;
+  toolboxProtractor.style.top = `${c.y}px`;
+  toolboxProtractor.style.transform = `translate(-50%, -50%)`;
+
+  const baseArm = toolboxProtractor.querySelector(".protractor-arm-base");
+  const measureArm = toolboxProtractor.querySelector(".protractor-arm-measure");
+  if (baseArm) {
+    baseArm.style.transform = `translateX(-50%) rotate(${protractorState.baseRotation}deg)`;
+  }
+  if (measureArm) {
+    measureArm.style.transform = `translateX(-50%) rotate(${protractorState.measureRotation}deg)`;
+  }
+
+  updateProtractorReadout();
+}
+
+function updateProtractorReadout() {
+  const readout = toolboxProtractor
+    ? toolboxProtractor.querySelector('[data-role="readout"]')
+    : null;
+  if (!readout) return;
+
+  // Compute the smaller angle (0–180°) between the two arms.
+  let diff = Math.abs(protractorState.measureRotation - protractorState.baseRotation);
+  diff = diff % 360;
+  if (diff > 180) diff = 360 - diff;
+  readout.textContent = `${Math.round(diff)}°`;
+}
+
+function getMapAreaPoint(event) {
+  const rect = document.querySelector(".map-area").getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+}
+
+// Interpolate from `from` toward `to` on a circle (handles wrap-around),
+// moving only a fraction (`t`, 0..1) of the way each step for reduced sensitivity.
+function lerpAngle(from, to, t) {
+  let diff = ((to - from + 540) % 360) - 180;
+  return from + diff * t;
+}
+
+function initToolboxPositions() {
+  const mapArea = document.querySelector(".map-area");
+  if (!mapArea) return;
+
+  const w = mapArea.clientWidth;
+  const h = mapArea.clientHeight;
+
+  rulerState.p1 = { x: Math.min(220, w * 0.35), y: h * 0.4 };
+  rulerState.p2 = { x: Math.min(460, w * 0.6), y: h * 0.4 };
+
+protractorState.center = { x: Math.min(300, w * 0.72), y: h * 0.4 };
+  protractorState.baseRotation = -90;
+  protractorState.measureRotation = -90;
+
+  updateRulerPosition();
+  updateProtractorPosition();
+}
+
+function syncResearcherToggle() {
+  if (!researcherToggle) return;
+  researcherToggle.textContent = toolboxActive ? "Hide Toolbox" : "Researcher Toolbox";
+  researcherToggle.setAttribute("aria-pressed", String(toolboxActive));
+}
+
+function toggleResearcherToolbox() {
+  toolboxActive = !toolboxActive;
+  if (researcherToolbox) {
+    researcherToolbox.classList.toggle("hidden", !toolboxActive);
+  }
+  syncResearcherToggle();
+
+  if (toolboxActive) {
+    initToolboxPositions();
+  }
+}
+
+function bindToolboxEvents() {
+  // Recompute the ruler distance whenever the map moves or zooms.
+  map.on("move zoom", updateRulerReadout);
+
+  // ---- RULER interactions ----
+  const line = rulerLineEl();
+
+// Drag the ruler body (move both endpoints together).
+  if (line) {
+    line.addEventListener("pointerdown", (event) => {
+      rulerState.dragging = "body";
+      rulerState.dragStart = getMapAreaPoint(event);
+      rulerState.centerStart = {
+        x: (rulerState.p1.x + rulerState.p2.x) / 2,
+        y: (rulerState.p1.y + rulerState.p2.y) / 2,
+      };
+      // Snapshot original endpoints so the body drag translates cleanly.
+      rulerState.p1Start = { ...rulerState.p1 };
+      rulerState.p2Start = { ...rulerState.p2 };
+      line.classList.add("dragging");
+      event.preventDefault();
+    });
+  }
+
+  // Endpoint & rotate handles.
+  toolboxRuler.querySelectorAll("[data-role]").forEach((handle) => {
+    if (handle.dataset.role === "readout") return;
+    handle.addEventListener("pointerdown", (event) => {
+      const role = handle.dataset.role;
+      rulerState.dragging = role;
+      rulerState.dragStart = getMapAreaPoint(event);
+      rulerState.centerStart = {
+        x: (rulerState.p1.x + rulerState.p2.x) / 2,
+        y: (rulerState.p1.y + rulerState.p2.y) / 2,
+      };
+      rulerState.angleStart = getRulerRotationDeg();
+      handle.classList.add("dragging");
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  });
+
+// ---- PROTRACTOR interactions ----
+  const dial = toolboxProtractor.querySelector(".protractor-dial");
+  const baseArm = toolboxProtractor.querySelector(".protractor-arm-base");
+  const measureArm = toolboxProtractor.querySelector(".protractor-arm-measure");
+
+  if (dial) {
+    dial.addEventListener("pointerdown", (event) => {
+      protractorState.dragging = "body";
+      protractorState.dragStart = getMapAreaPoint(event);
+      protractorState.centerStart = { ...protractorState.center };
+      dial.classList.add("dragging");
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  }
+
+  const bindArmDrag = (armEl, role) => {
+    if (!armEl) return;
+    armEl.addEventListener("pointerdown", (event) => {
+      protractorState.dragging = role;
+      protractorState.dragStart = getMapAreaPoint(event);
+      protractorState.centerStart = { ...protractorState.center };
+      armEl.classList.add("dragging");
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  };
+
+  bindArmDrag(baseArm, "arm-base");
+  bindArmDrag(measureArm, "arm-measure");
+
+  // ---- Global pointer move / up ----
+  const mapArea = document.querySelector(".map-area");
+
+  mapArea.addEventListener("pointermove", (event) => {
+    const point = getMapAreaPoint(event);
+
+    if (rulerState.dragging) {
+      const dx = point.x - rulerState.dragStart.x;
+      const dy = point.y - rulerState.dragStart.y;
+
+if (rulerState.dragging === "body") {
+        rulerState.p1 = {
+          x: rulerState.p1Start.x + dx,
+          y: rulerState.p1Start.y + dy,
+        };
+        rulerState.p2 = {
+          x: rulerState.p2Start.x + dx,
+          y: rulerState.p2Start.y + dy,
+        };
+      } else if (rulerState.dragging === "endpoint-a") {
+        rulerState.p1 = { x: point.x, y: point.y };
+      } else if (rulerState.dragging === "endpoint-b") {
+        rulerState.p2 = { x: point.x, y: point.y };
+} else if (rulerState.dragging === "rotate") {
+        const newAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
+        const delta = (newAngle - rulerState.angleStart) * ROTATION_SENSITIVITY;
+        rotateRulerAroundCenter(delta);
+      }
+
+      enforceRulerMinLength();
+      updateRulerPosition();
+    }
+
+if (protractorState.dragging) {
+      if (protractorState.dragging === "body") {
+        protractorState.center = {
+          x: protractorState.centerStart.x + (point.x - protractorState.dragStart.x),
+          y: protractorState.centerStart.y + (point.y - protractorState.dragStart.y),
+        };
+} else if (protractorState.dragging === "arm-base") {
+        const rel = {
+          x: point.x - protractorState.center.x,
+          y: point.y - protractorState.center.y,
+        };
+        const target = (Math.atan2(rel.y, rel.x) * 180) / Math.PI;
+        protractorState.baseRotation = lerpAngle(
+          protractorState.baseRotation,
+          target,
+          PROTRACTOR_SENSITIVITY
+        );
+      } else if (protractorState.dragging === "arm-measure") {
+        const rel = {
+          x: point.x - protractorState.center.x,
+          y: point.y - protractorState.center.y,
+        };
+        const target = (Math.atan2(rel.y, rel.x) * 180) / Math.PI;
+        protractorState.measureRotation = lerpAngle(
+          protractorState.measureRotation,
+          target,
+          PROTRACTOR_SENSITIVITY
+        );
+      }
+      updateProtractorPosition();
+    }
+  });
+
+  const endDrag = () => {
+    rulerState.dragging = null;
+    protractorState.dragging = null;
+    toolboxRuler.querySelectorAll(".dragging").forEach((el) => el.classList.remove("dragging"));
+    toolboxProtractor.querySelectorAll(".dragging").forEach((el) => el.classList.remove("dragging"));
+  };
+
+  mapArea.addEventListener("pointerup", endDrag);
+  mapArea.addEventListener("pointercancel", endDrag);
+}
+
+function rotateRulerAroundCenter(deltaDeg) {
+  const cx = (rulerState.p1.x + rulerState.p2.x) / 2;
+  const cy = (rulerState.p1.y + rulerState.p2.y) / 2;
+  const rad = (deltaDeg * Math.PI) / 180;
+
+  const rot = (p) => {
+    const px = p.x - cx;
+    const py = p.y - cy;
+    return {
+      x: cx + px * Math.cos(rad) - py * Math.sin(rad),
+      y: cy + px * Math.sin(rad) + py * Math.cos(rad),
+    };
+  };
+
+  rulerState.p1 = rot(rulerState.p1);
+  rulerState.p2 = rot(rulerState.p2);
+}
+
+function enforceRulerMinLength() {
+  const dx = rulerState.p2.x - rulerState.p1.x;
+  const dy = rulerState.p2.y - rulerState.p1.y;
+  const length = Math.hypot(dx, dy);
+  if (length < RULER_MIN_LENGTH) {
+    const scale = RULER_MIN_LENGTH / (length || 1);
+    const cx = (rulerState.p1.x + rulerState.p2.x) / 2;
+    const cy = (rulerState.p1.y + rulerState.p2.y) / 2;
+    rulerState.p1 = { x: cx + (rulerState.p1.x - cx) * scale, y: cy + (rulerState.p1.y - cy) * scale };
+    rulerState.p2 = { x: cx + (rulerState.p2.x - cx) * scale, y: cy + (rulerState.p2.y - cy) * scale };
+  }
+}
 
 function yesNo(value) {
   return value ? "Yes" : "No";
@@ -624,7 +1004,7 @@ function highlightSelection() {
 function getTourAuthorIndex(author) {
   return authors.findIndex((entry) => entry.number === author.number);
 }
-
+ 
 function getTourDecadeIndex(author) {
   const activeIndex = DECADES.findIndex((decade) => isActiveInDecade(author, decade));
   if (activeIndex >= 0) return activeIndex;
@@ -1008,9 +1388,10 @@ async function init() {
   // Initialize the map FIRST so it always renders, even if the data
   // fails to load (e.g. when the page is opened directly via file://
   // where fetch() of local JSON is blocked by browser CORS).
-  initMap();
+initMap();
   networkLayer = L.layerGroup().addTo(map);
   bindEvents();
+  bindToolboxEvents();
   renderDecadeButtons();
   showEmptyDetailPanel();
   syncFocusMapMode();
@@ -1414,12 +1795,14 @@ function bindEvents() {
     updateView();
   });
 
-  closeDetailBtn.addEventListener("click", hideDetail);
+closeDetailBtn.addEventListener("click", hideDetail);
   toggleImageBtn?.addEventListener("click", toggleDetailImage);
   focusMapToggle?.addEventListener("click", () => {
     focusMapMode = !focusMapMode;
     syncFocusMapMode();
   });
+
+  researcherToggle?.addEventListener("click", toggleResearcherToolbox);
 
   tourStartBtn?.addEventListener("click", startTour);
   tourPrevBtn?.addEventListener("click", () => advanceTour(-1));

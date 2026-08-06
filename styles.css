@@ -616,6 +616,263 @@ textarea:focus {
   line-height: 1.3;
 }
 
+/* ========== RESEARCHER TOOLBOX ========== */
+.researcher-toolbox {
+  position: absolute;
+  inset: 0;
+  z-index: 800;
+  pointer-events: none;
+}
+
+.researcher-toolbox.hidden {
+  display: none;
+}
+
+.toolbox-tools {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* RULER */
+.toolbox-ruler {
+  position: absolute;
+  left: 200px;
+  top: 200px;
+  width: 220px;
+  height: 220px;
+  pointer-events: none;
+}
+
+.ruler-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, var(--accent), #f8d39a);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.5);
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.ruler-line.dragging {
+  cursor: grabbing;
+}
+
+.ruler-handle {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 3px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.ruler-handle:hover {
+  background: #f8d39a;
+}
+
+.ruler-handle.dragging {
+  cursor: grabbing;
+  background: #f8d39a;
+}
+
+.ruler-handle-a {
+  left: 0;
+}
+
+.ruler-handle-b {
+  left: 100%;
+}
+
+.ruler-rotate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--active);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.ruler-rotate.dragging {
+  cursor: grabbing;
+}
+
+.ruler-readout {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(18, 22, 30, 0.92);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+}
+
+.toolbox-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(18, 22, 30, 0.85);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+/* PROTRACTOR */
+.toolbox-protractor {
+  position: absolute;
+  right: 260px;
+  top: 200px;
+  width: 220px;
+  height: 220px;
+  pointer-events: none;
+}
+
+.protractor-dial {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 180px;
+  height: 180px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.08) 0%, rgba(18, 22, 30, 0.55) 100%);
+  box-shadow: 0 0 18px rgba(212, 165, 116, 0.25);
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.protractor-dial.dragging {
+  cursor: grabbing;
+}
+
+/* PROTRACTOR HANDS - full-length clock hands anchored at dial center */
+.protractor-arm {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 3px;
+  height: 50%;
+  background: var(--active);
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) rotate(0deg);
+  pointer-events: auto;
+  cursor: grab;
+  box-shadow: 0 0 8px rgba(88, 166, 255, 0.6);
+  border-radius: 999px;
+}
+
+.protractor-arm-base {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.6);
+}
+
+.protractor-arm-measure {
+  background: var(--active);
+  box-shadow: 0 0 8px rgba(88, 166, 255, 0.6);
+}
+
+.protractor-arm-tip {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--active);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.protractor-arm-tip:hover,
+.protractor-arm-tip.dragging {
+  background: #f0f6ff;
+}
+
+.protractor-arm-base .protractor-arm-tip {
+  border-color: var(--accent);
+}
+
+.protractor-arm.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+.protractor-arm-tip.dragging {
+  cursor: grabbing;
+}
+
+.protractor-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.protractor-readout {
+  position: absolute;
+  bottom: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(18, 22, 30, 0.92);
+  color: var(--active);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+}
+
+/* Ensure tools stay above timeline but below detail/legend panels */
+.researcher-toolbox {
+  z-index: 750;
+}
+
 /* ========== TIMELINE DOCK ========== */
 .timeline-dock {
   position: absolute;
