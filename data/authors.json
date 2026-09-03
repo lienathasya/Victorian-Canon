@@ -672,7 +672,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  false,
-        "financiallyPrivileged":  true
+        "financiallyPrivileged":  false
     },
     {
         "number":  26,
@@ -1158,7 +1158,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  true,
-        "financiallyPrivileged":  false
+        "financiallyPrivileged":  true
     },
     {
         "number":  44,
@@ -1185,7 +1185,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  false,
-        "financiallyPrivileged":  true
+        "financiallyPrivileged":  false
     },
     {
         "number":  45,
@@ -1266,7 +1266,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  false,
-        "financiallyPrivileged":  true
+        "financiallyPrivileged":  false
     },
     {
         "number":  48,
@@ -1293,7 +1293,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  true,
-        "financiallyPrivileged":  false
+        "financiallyPrivileged":  true
     },
     {
         "number":  49,
@@ -1401,7 +1401,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  true,
-        "financiallyPrivileged":  false
+        "financiallyPrivileged":  true
     },
     {
         "number":  53,
@@ -1428,7 +1428,7 @@
         "ethnicity_white":  true,
         "ethnicity_nonwhite":  false,
         "writingAsLivelihood":  true,
-        "financiallyPrivileged":  false
+        "financiallyPrivileged":  true
     },
     {
         "number":  54,
